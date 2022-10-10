@@ -1,13 +1,22 @@
-struct Test {
-    text: String,
-}
+use std::{
+    io::{prelude::*, BufReader},
+    net::{TcpListener, TcpStream},
+};
 
 fn main() {
-    let mut test = Test { text: "Hello".to_string() };
-    mutate_test(&mut test);
-    println!("Test is {}", test.text);
+    let listener = TcpListener::bind("127.0.0.1:6789").unwrap();
+    for stream in listener.incoming() {
+        let stream = stream.unwrap();
+        handle_connection(stream);
+    }
 }
 
-fn mutate_test(test: &mut Test) {
-    test.text = "World".to_string();
+fn handle_connection(mut stream: TcpStream) {
+    let buf_reader = BufReader::new(&stream);
+    let http_request: Vec<_> = buf_reader
+        .lines()
+        .map(|result| result.unwrap())
+        .take_while(|line| line != "")
+        .collect();
+    println!("Request: {:#?}", http_request);
 }
